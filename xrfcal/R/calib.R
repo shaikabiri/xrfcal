@@ -34,9 +34,9 @@ calib <- function(X,Y,method = "RF"){
     out <- averager(nzX,Y)
     nzX <- out[[1]]
     Y <- out[[2]]
-    
+    set.seed(123)
+    folds <- caret::createFolds(Y[,1],k=3)
     R2 <- matrix(ncol=(ncol(X)),nrow=(ncol(X)))
-    
     #do an LRCE for each element as denominator and save the results
     for (i in 1:ncol(nzX))
     {
@@ -45,14 +45,34 @@ calib <- function(X,Y,method = "RF"){
       Yalr <- alr(Y,i)
       
       for (j in 1:ncol(Xalr)){
-        #model <- lmodel2::lmodel2(Yalr[,j]~Xalr[,j])
-        #model <- robslopes::TheilSen(Xalr[,j],Yalr[,j])
-        model <- lm(Yalr[,j]~as.matrix(Xalr))
-        #model <- Cubist::cubist(y=Yalr[,j],x=Xalr)
-        #yhat <- Xalr[,j]*model$slope + model$intercept
-        #yhat <- predict(model,Xalr)
-        #rsquare <- cor(Yalr[,j],yhat)^2
-        R2i[j] <- summary(model)$r.squared}
+        R2k = vector(length = length(folds))
+        for (k in 1:length(folds)){
+          Xtest <- Xalr[folds[[k]],]
+          Xtrain <- Xalr[-folds[[k]],]
+          Ytest <- Yalr[folds[[k]],j]
+          Ytrain <- Yalr[-folds[[k]],j]
+
+          
+          if (method=="cubist")
+          {
+            model <- Cubist::cubist(y=Ytrain,x=Xtrain)
+            pred <- predict(model,Xtest)
+          }
+          
+          if (method=="linear")
+          {
+            model <- lm(Ytrain~as.matrix(Xtrain))
+            pred <- as.matrix(Xtest)%*%model$coefficients[2:31] + model$coefficients[1]
+          }
+          
+          if (method=="RF")
+          {
+            model <- randomForest::randomForest(x=Xtrain,y=Ytrain,mtry=30,ntree=300)
+          }
+          
+          R2k[k] <- caret::postResample(pred,Ytest)[2]
+        }
+        R2i[j] <- mean(R2k)}
       R2i <- append(R2i,0,after=i-1)
       R2[,i]<- R2i
     }
@@ -65,6 +85,8 @@ calib <- function(X,Y,method = "RF"){
     Y <- out[[2]]
     
     
+    set.seed(123)
+    folds <- caret::createFolds(Y[,1],k=3)
     #do an LRCE for each element as denominator and save the results
     for (i in 1:ncol(X))
     {
