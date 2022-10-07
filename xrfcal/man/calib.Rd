@@ -4,14 +4,16 @@
 \alias{calib}
 \title{Calibrate XRF counts to element concentrations
 This function takes an XRF counts matrix and reference concentrations
-count matrix and outputs alphas and betas}
+count matrix and outputs alphas and betas.}
 \usage{
-calib(X, Y)
+calib(X, Y, method = "RF")
 }
 \arguments{
 \item{X}{Elemental counts matrix}
 
 \item{Y}{Reference concentrations}
+
+\item{method}{}
 }
 \value{
 A matrix of alphas and betas
@@ -19,5 +21,5 @@ A matrix of alphas and betas
 \description{
 Calibrate XRF counts to element concentrations
 This function takes an XRF counts matrix and reference concentrations
-count matrix and outputs alphas and betas
+count matrix and outputs alphas and betas.
 }
