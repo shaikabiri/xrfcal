@@ -13,7 +13,8 @@
 
 alr <- function(X,d){
   X <- X/rowSums(X)
-  X <- X/X[,i]
-  X <- X[,-i]
+  X <- X/X[,d]
+  X <- X[,-d]
   X <- log(X)
+  return(X)
 }

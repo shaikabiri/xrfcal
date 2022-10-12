@@ -13,6 +13,7 @@
 
 invalr <- function(X,d){
   X <- exp(X)
-  X <- tibble::add_column(X,1,before=d)
-  X <- X/X[,i]
+  X <- tibble::add_column(as.data.frame(X),1,.before=d)
+  X <- X/rowSums(X)
+  return(X)
 }
