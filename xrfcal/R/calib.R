@@ -1,7 +1,7 @@
 #' Calibrate XRF counts to element concentrations
 #' This function takes an XRF counts matrix and reference concentrations 
 #' and returns a model object with R2s, RMSEs and  a predictor function for new data.
-#' @example
+#' @examples
 #' #Using the example data in the package build a calibration model
 #' mdl <- calib(xrf[[1]],xrf[[2]], method = "MLR", denom = "Auto")
 #' 
@@ -9,11 +9,10 @@
 #' @param X Elemental counts matrix
 #' @param Y Reference concentrations matrix
 #' @param method Regression model. Either "LRCE", "MLR", "Cubist" or "RF". RF and Cubist generally take longer time to train
-#' @param denom Denominator for the logratio transformation. Can take values "Auto", "All" or abbreviation of an element that is in references column names such as "Ca".
-#' "Auto" chooses the best denominator for each element, "All" outputs the R2 and RMSEs for all the denominators and the predictor function will take extra argument 
-#' for a denominator in this case. If the abbreviation for a specific denominator is used only the results for that specific denominator will be available in the model object output.
-#' @param dl Detection limits to use for zero replacement algorithm. A vector with D elements. If not provided will be estimated. 
+#' @param dl (Optional) Detection limits to use for zero replacement algorithm. A vector with D elements. If not provided will be estimated. 
 #' @param oalr A boolean parameter. If true the model results and predictor function will be in alr space.
+#' @param mtry The number of variables for random forest to sample randomly at each split 
+#' @param ntree Number of estimators for random forest
 #' @return A model object that includes R2s, RMSEs and a predictor function, pred.
 #' @export
 
@@ -21,9 +20,37 @@ calib <-
   function(X,
            Y,
            method = "RF",
-           denom = "Auto",
            dl = 0,
-           oalr = FALSE) {
+           oalr = FALSE,
+           mtry = ncol(X),
+           ntree = 20) {
+    
+    if (!(TRUE %in% (method == c("RF","MLR","Cubist","LRCE"))))
+    {
+      stop(paste(method," is not a known regression method."))
+    }
+    
+    if (nrow(X)!=nrow(Y))
+    {
+      stop("X and Y should have the same number of rows.")
+    }
+    
+    if ((length(dl)!=ncol(X))&dl!=0)
+    {
+      stop("Detection limits should have the same length as number of elements in X.")
+    }
+    
+    if ((length(dl)!=ncol(X))&dl!=0)
+    {
+      stop("Detection limits should have the same length as number of elements in X.")
+    }
+    
+    if ((typeof(oalr)!="logical"))
+    {
+      stop("Oalr must be boolean")
+    }
+    
+    
     #align the two matrices
     X = as.matrix(X)
     Y = as.matrix(Y)
@@ -50,10 +77,11 @@ calib <-
       nzX <- zCompositions::multRepl(nzX, dl = dl, label = 0)
     }
     
-    
-    out <- averager(nzX, Y)
-    nzX <- out[[1]]
-    Y <- out[[2]]
+    if (nrow(unique(Y))!=nrow(Y)){
+      out <- averager(nzX, Y)
+      nzX <- out[[1]]
+      Y <- out[[2]]
+    }
     set.seed(123)
     folds <- caret::createFolds(Y[, 1], k = 3)
     R2 <- matrix(ncol = (ncol(Y)), nrow = (ncol(Y)))
@@ -83,7 +111,7 @@ calib <-
         for (j in 1:ncol(Yalr)) {
           if (method == "LRCE")
           {
-            model <- lm(Ytrain[, j] ~ as.matrix(Xtrain[, j]))
+            model <- stats::lm(Ytrain[, j] ~ as.matrix(Xtrain[, j]))
             pred <-
               as.matrix(Xtest[, j]) %*% model$coefficients[2] + model$coefficients[1]
           }
@@ -92,14 +120,14 @@ calib <-
           if (method == "Cubist")
           {
             model <- Cubist::cubist(y = Ytrain[,j], x = Xtrain)
-            pred <- predict(model, Xtest)
+            pred <- stats::predict(model, Xtest)
           }
           
           if (method == "MLR")
           {
-            model <- lm(Ytrain[, j] ~ as.matrix(Xtrain))
+            model <- stats::lm(Ytrain[, j] ~ as.matrix(Xtrain))
             pred <-
-              as.matrix(Xtest) %*% model$coefficients[2:ncol(nzX)] + model$coefficients[1]
+              as.matrix(Xtest) %*% model$coefficients[2:(ncol(nzX))] + model$coefficients[1]
           }
           
           if (method == "RF")
@@ -108,10 +136,10 @@ calib <-
               randomForest::randomForest(
                 x = Xtrain,
                 y = Ytrain[,j],
-                mtry = 30,
-                ntree = 300
+                mtry = mtry,
+                ntree = ntree
               )
-            pred <- predict(model, Xtest)
+            pred <- stats::predict(model, Xtest)
           }
           
           preds[, j] <- pred
@@ -153,11 +181,20 @@ calib <-
   
 
 mdl <- list()
-mdl[["X"]] <- X
+mdl[["X"]] <- nzX
 mdl[["Y"]] <- Y
 mdl[["R2"]] <- R2
 mdl[["RMSE"]] <- RMSE
 mdl[["Method"]] <- method
+mdl[["BestR2"]] <- apply(R2,1,max)
+mdl[["BestRMSE"]] <- apply(RMSE,1,max)
+mdl[["BestDenom"]] <- colnames(Y)[apply(R2,1,which.max)]
+mdl[["dl"]] <- dl
+
+if (method=="RF"){
+  mdl[["mtry"]] <- mtry
+  mdl[["ntree"]] <- ntree
+}
 
 
 return(mdl)

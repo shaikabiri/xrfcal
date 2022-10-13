@@ -6,7 +6,7 @@
 This function takes an XRF counts matrix and reference concentrations
 and returns a model object with R2s, RMSEs and  a predictor function for new data.}
 \usage{
-calib(X, Y, method = "RF", denom = "Auto", dl = 0, oalr = FALSE)
+calib(X, Y, method = "RF", dl = 0, oalr = FALSE, mtry = ncol(X), ntree = 20)
 }
 \arguments{
 \item{X}{Elemental counts matrix}
@@ -15,13 +15,13 @@ calib(X, Y, method = "RF", denom = "Auto", dl = 0, oalr = FALSE)
 
 \item{method}{Regression model. Either "LRCE", "MLR", "Cubist" or "RF". RF and Cubist generally take longer time to train}
 
-\item{denom}{Denominator for the logratio transformation. Can take values "Auto", "All" or abbreviation of an element that is in references column names such as "Ca".
-"Auto" chooses the best denominator for each element, "All" outputs the R2 and RMSEs for all the denominators and the predictor function will take extra argument
-for a denominator in this case. If the abbreviation for a specific denominator is used only the results for that specific denominator will be available in the model object output.}
-
-\item{dl}{Detection limits to use for zero replacement algorithm. A vector with D elements. If not provided will be estimated.}
+\item{dl}{(Optional) Detection limits to use for zero replacement algorithm. A vector with D elements. If not provided will be estimated.}
 
 \item{oalr}{A boolean parameter. If true the model results and predictor function will be in alr space.}
+
+\item{mtry}{The number of variables for random forest to sample randomly at each split}
+
+\item{ntree}{Number of estimators for random forest}
 }
 \value{
 A model object that includes R2s, RMSEs and a predictor function, pred.
@@ -30,4 +30,10 @@ A model object that includes R2s, RMSEs and a predictor function, pred.
 Calibrate XRF counts to element concentrations
 This function takes an XRF counts matrix and reference concentrations
 and returns a model object with R2s, RMSEs and  a predictor function for new data.
+}
+\examples{
+#Using the example data in the package build a calibration model
+mdl <- calib(xrf[[1]],xrf[[2]], method = "MLR", denom = "Auto")
+
+
 }
