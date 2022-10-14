@@ -3,8 +3,12 @@
 #' and returns a model object with R2s, RMSEs and  a predictor function for new data.
 #' @examples
 #' #Using the example data in the package build a calibration model
-#' mdl <- calib(xrf[[1]],xrf[[2]], method = "MLR", denom = "Auto")
+#' mdl <- calib(xrf$X,xrf$Y, method = "MLR")
 #' 
+#' @references
+#' Insert own publication later
+#' 
+#' Weltje, G. J., & Tjallingii, R. (2008). Calibration of XRF core scanners for quantitative geochemical logging of sediment cores: Theory and application. Earth and Planetary Science Letters, 274(3), 423-438. https://doi.org/10.1016/j.epsl.2008.07.054 
 #' 
 #' @param X Elemental counts matrix
 #' @param Y Reference concentrations matrix
@@ -47,7 +51,7 @@ calib <-
     
     if ((typeof(oalr)!="logical"))
     {
-      stop("Oalr must be boolean")
+      stop("oalr must be boolean")
     }
     
     
@@ -127,7 +131,7 @@ calib <-
           {
             model <- stats::lm(Ytrain[, j] ~ as.matrix(Xtrain))
             pred <-
-              as.matrix(Xtest) %*% model$coefficients[2:(ncol(nzX))] + model$coefficients[1]
+              as.matrix(Xtest) %*% model$coefficients[2:(ncol(Xtest)+1)] + model$coefficients[1]
           }
           
           if (method == "RF")

@@ -2,6 +2,10 @@
 #'
 #' This function takes a trained calibration model and a matrix of elemental concentrations
 #' and predicts elemental concentrations for the matrix.
+#' @references
+#' Insert own publication later
+#' 
+#' Weltje, G. J., & Tjallingii, R. (2008). Calibration of XRF core scanners for quantitative geochemical logging of sediment cores: Theory and application. Earth and Planetary Science Letters, 274(3), 423-438. https://doi.org/10.1016/j.epsl.2008.07.054 
 #' 
 #' @param mdl A model object created by xrfcal::calib()
 #' @param newX An elemental counts matrix to make concentration predictions based on the trained model
@@ -84,7 +88,7 @@ pred <- function(mdl, newX) {
       
       for (j in 1:(ncol(mdl$Y) - 1)) {
         model <- Cubist::cubist(y = Yt[,j], x = Xt)
-        Yhatj[, j] <- stat::predict(model,newXt)
+        Yhatj[, j] <- stats::predict(model,newXt)
       }
       Yhatj <- invalr(Yhatj,bdy)
       Yhat[,i] <- Yhatj[,i]

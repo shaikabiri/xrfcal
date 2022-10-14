@@ -1,10 +1,4 @@
-#' Average to reduce inputs and their noise
-#' This is to reduce the number of counts associated with concentrations.
-#' @param X Elemental counts matrix
-#' @param Y Reference concentrations 
-#' @return A reduced X and Y matrix
-#' 
-#' 
+
 quant <- function(X,p){
   return(as.numeric(stats::quantile(X,probs=p)))
 }

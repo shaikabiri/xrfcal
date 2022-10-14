@@ -2,19 +2,19 @@
 % Please edit documentation in R/alr.R
 \name{alr}
 \alias{alr}
-\title{Convert a matrix to additive logratio matrix}
+\title{Simplex matrix to additive logratio matrix}
 \usage{
 alr(X, d)
 }
 \arguments{
-\item{X}{A matrix of compositions}
+\item{X}{A matrix of compositions in simplex space}
 
-\item{d}{Index of column to be used as denominator}
+\item{d}{Index of the column to be used as denominator}
 }
 \value{
 An alr matrix of D-1 elements
 }
 \description{
-This functions take a matrix X of compositions of D elements, close it and convert it
-to additive logratio space with D-1 elements with column d as the denominator.
+This function takes a composition matrix X with D elements in simplex space, closes it 1 and converts it
+to a matrix in additive logratio space with D-1 elements with column d as the denominator.
 }

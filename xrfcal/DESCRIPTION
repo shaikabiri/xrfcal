@@ -1,12 +1,18 @@
 Package: xrfcal
-Title: What the Package Does (One Line, Title Case)
+Title: Calibrating XRF scanners elemental counts to reference elemental concentrations
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+    c(person("Shayan", "Kabiri", , "shayankabiri6@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "https://orcid.org/0000-0003-3231-5843")),
+    person("Nicholas M.", "Holden", role = c("aut"),
+           comment = c(ORCID = "https://orcid.org/0000-0002-0452-4632")),
+    person("Rory.", "Flood", role = c("aut")) ,
+    person("Jonathan N.", "Turner", role = c("aut"),
+           comment = c(ORCID = "https://orcid.org/0000-0001-6596-1038")),    
+    person("Sharon M.", "O'Rourke", role = c("aut"),
+           comment = c(ORCID = "https://orcid.org/0000-0002-4565-1689")))
+Description: Methods for converting elemental counts acquired by XRF scanner to reference elemental concentrations acquired by conventional methods such as ICP (Kabiri et al. (2022) <doi>, Weltje and Tjalingii (2008) <doi:10.1016/j.epsl.2008.07.054>).
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1
@@ -17,4 +23,9 @@ Imports:
     lmodel2,
     zCompositions,
     agrmt,
-    stats
+    stats,
+    caret,
+    Cubist,
+    randomForest,
+    tibble,
+    Rdpack

@@ -33,7 +33,11 @@ and returns a model object with R2s, RMSEs and  a predictor function for new dat
 }
 \examples{
 #Using the example data in the package build a calibration model
-mdl <- calib(xrf[[1]],xrf[[2]], method = "MLR", denom = "Auto")
+mdl <- calib(xrf$X,xrf$Y, method = "MLR")
 
+}
+\references{
+Insert own publication later
 
+Weltje, G. J., & Tjallingii, R. (2008). Calibration of XRF core scanners for quantitative geochemical logging of sediment cores: Theory and application. Earth and Planetary Science Letters, 274(3), 423-438. https://doi.org/https://doi.org/10.1016/j.epsl.2008.07.054
 }
