@@ -1,31 +1,67 @@
-#' Calibrate XRF counts to element concentrations
-#' This function takes an XRF counts matrix and reference concentrations 
-#' and returns a model object with R2s, RMSEs and  a predictor function for new data.
+#' @title Calibrate XRF counts to element concentrations
+#' @description This function takes an XRF counts matrix and reference concentrations matrix
+#' and returns a model object with R2s and RMSEs for each element with various denominators for alr and best R2, RMSE, and denominator for each element. Four methods are available to use, with logratio calibration equation (LRCE)
+#' using a single input for regression for each element, and multiple linear regression (MLR), cubist (Cubist) and random forest (RF), taking multiple inputs. Random forest and cubist are more computationally expensive
+#' to train but generally more powerful. 
 #' @examples
 #' #Using the example data in the package build a calibration model
-#' mdl <- calib(xrf$X,xrf$Y, method = "MLR")
+#' mdl <- xrfcal(xrf$X,xrf$Y, method = "LRCE")
+#' 
+#' #Plot R2s for different denominators for potassium
+#' barplot(mdl$R2[which(rownames(mdl$R2)=="K"),],names.arg = colnames(mdl$R2),
+#'     xlab="Denominator",ylab=paste("Crossvalidated R² for potassium"))
+#' 
+#' #Print out best R2 and best denominator for each element
+#' print(rbind(mdl$BestR2,mdl$BestDenom))
+#' @details 
+#' In order to linearlize and reduce diversion from normal distribution and to
+#' make methods applicable to linear geometry, also applicable to compositional geometry as well,
+#' it is argued based on work of Aitchison (1982) that elemental counts and concentrations should be transformed to an additive logratio space.
+#' In the current package in addition to simple linear regression between each two elements in additive logratio space (LRCE), 
+#' multiple regressions with cubist, random forest and multiple linear regression are also implemented. 
+#' In addition to this for each element all possible denominators for alr transformation are considered and the best
+#' denominator is chosen for prediction purposes.
+#' 
+#' The procedure for developing the model is as followed:
+#' \enumerate{
+#'  \item if "LRCE" is chosen as regression method, only use the mutual elements in X and Y. Otherwise, use all.
+#'  \item if there are zeroes in X, use `multRepl` from `zCompositions` to replace zeroes. If detection limits are not provided
+#'  estimate them as the minimum counts detected by XRF scanner for each element.
+#'  \item if `reduce` is `TRUE`, reduce dataset to a representative dataset by taking mean, first and third percentile
+#'  of counts for each unique Y and aggregate them to a new dataset. 
+#'  \item split data in three folds.
+#'  \item for each fold, transform training and test set to alr space for each element as denominator.
+#'  \item for each element as denominator train the model, make predictions on test sets, transform back to simplex, and record average RMSE and R2 over three folds.
+#'  \item export results for investigation and parameters for the prediction function `pred`.
+#' } 
 #' 
 #' @references
-#' Insert own publication later
+#' Weltje, G. J., & Tjallingii, R. (2008). Calibration of XRF core scanners for quantitative geochemical logging of sediment cores: Theory and application. Earth and Planetary Science Letters, 274(3), 423-438. https://doi.org/10.1016/j.epsl.2008.07.054
+#'  
+#' Breiman, L. (2001). Random Forests. Machine Learning, 45(1), 5-32. https://doi.org/10.1023/A:1010933404324
 #' 
-#' Weltje, G. J., & Tjallingii, R. (2008). Calibration of XRF core scanners for quantitative geochemical logging of sediment cores: Theory and application. Earth and Planetary Science Letters, 274(3), 423-438. https://doi.org/10.1016/j.epsl.2008.07.054 
+#' Quinlan, J.R. (1993). Combining Instance-Based and Model-Based Learning. ICML.
 #' 
-#' @param X Elemental counts matrix
-#' @param Y Reference concentrations matrix
-#' @param method Regression model. Either "LRCE", "MLR", "Cubist" or "RF". RF and Cubist generally take longer time to train
-#' @param dl (Optional) Detection limits to use for zero replacement algorithm. A vector with D elements. If not provided will be estimated. 
-#' @param oalr A boolean parameter. If true the model results and predictor function will be in alr space.
-#' @param mtry The number of variables for random forest to sample randomly at each split 
-#' @param ntree Number of estimators for random forest
-#' @return A model object that includes R2s, RMSEs and a predictor function, pred.
+#' Aitchison, J. (1982). The Statistical Analysis of Compositional Data. Journal of the Royal Statistical Society. Series B (Methodological), 44(2), 139-177. http://www.jstor.org/stable/2345821 
+#' 
+#' @param X Elemental counts matrix in simplex space. Doesn't have to be closed.
+#' @param Y Reference concentrations matrix in simplex space. Doesn't have to be closed.
+#' @param method Regression method. Either "LRCE", "MLR", "Cubist" or "RF".
+#' @param dl Detection limits to use for zero replacement algorithm. A vector with D elements. If not provided will be estimated. 
+#' @param oalr A boolean parameter. If true the model results will be in alr space.
+#' @param reduce A boolean parameter. If true X and Y will be reduced to a representative dataset. 
+#' @param mtry The number of variables for random forest to sample randomly at each split.
+#' @param ntree Number of estimators for random forest.
+#' @return A model object with attributes R2, RMSE, BestR2, BestRMSE and BestDenom. Rest of attributes are used for prediction function.
 #' @export
 
-calib <-
+xrfcal <-
   function(X,
            Y,
            method = "RF",
            dl = 0,
            oalr = FALSE,
+           reduce = TRUE,
            mtry = ncol(X),
            ntree = 20) {
     
@@ -81,7 +117,7 @@ calib <-
       nzX <- zCompositions::multRepl(nzX, dl = dl, label = 0)
     }
     
-    if (nrow(unique(Y))!=nrow(Y)){
+    if (reduce){
       out <- averager(nzX, Y)
       nzX <- out[[1]]
       Y <- out[[2]]
@@ -183,6 +219,10 @@ calib <-
       
     }
   
+rownames(R2) <- colnames(Y)
+colnames(R2) <- colnames(Y)
+rownames(RMSE) <- colnames(Y)
+colnames(RMSE) <- colnames(Y)
 
 mdl <- list()
 mdl[["X"]] <- nzX

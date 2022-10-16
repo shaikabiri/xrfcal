@@ -2,19 +2,27 @@
 % Please edit documentation in R/invalr.R
 \name{invalr}
 \alias{invalr}
-\title{Convert back a matrix from additive logratio to simplex space}
+\title{Additive logratio matrix to simplex matrix}
 \usage{
 invalr(X, d)
 }
 \arguments{
-\item{X}{A matrix of compositions in alr}
+\item{X}{A matrix of compositions in alr space with D-1 columns}
 
-\item{d}{Index of column to be used as denominator}
+\item{d}{Index of the column that was used as denominator for original alr transformation}
 }
 \value{
-A matrix in simplex space with D columns
+A matrix of compositions in simplex space with D columns
 }
 \description{
-This functions take a matrix X of compositions of D-1 elements in alr space and converts it
-to simplex space with D elements with column d as the denominator.
+This function takes a composition matrix X with D-1 elements in additive logratio space converts it
+back to a matrix in simplex space with D elements with column d as the denominator of alr transformation.
+}
+\examples{
+#Transform elemetal counts to alr with calcium as denominator and transform it back to simplex. 
+Xalr <- alr(xrf$X,6) 
+Xsimplex <- invalr(Xalr,6)
+}
+\references{
+Aitchison, J. (1982). The Statistical Analysis of Compositional Data. Journal of the Royal Statistical Society. Series B (Methodological), 44(2), 139-177. http://www.jstor.org/stable/2345821
 }

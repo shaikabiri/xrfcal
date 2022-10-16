@@ -3,7 +3,7 @@
 \docType{data}
 \name{xrf}
 \alias{xrf}
-\title{An example of XRF counts and reference concentrations to be used}
+\title{Example XRF counts and reference concentration data}
 \format{
 An object of class \code{list} of length 2.
 }
@@ -11,6 +11,10 @@ An object of class \code{list} of length 2.
 xrf
 }
 \description{
-An example of XRF counts and reference concentrations to be used
+An example of XRF counts and reference concentrations to be used. \code{xrf$X} is the elemental counts measured by XRF core scanner
+and \code{xrf$Y} are reference elemental concentrations measured by ICP.
+}
+\references{
+ADD REFERENCE LATER
 }
 \keyword{datasets}

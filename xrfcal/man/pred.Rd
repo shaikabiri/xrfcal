@@ -2,19 +2,74 @@
 % Please edit documentation in R/pred.R
 \name{pred}
 \alias{pred}
-\title{Predict new concentrations based on a trained model}
+\title{Predict new concentrations based on a trained calibration model}
 \usage{
 pred(mdl, newX)
 }
 \arguments{
-\item{mdl}{A model object created by xrfcal::calib()}
+\item{mdl}{A model object created by xrfcal::calib().}
 
-\item{newX}{An elemental counts matrix to make concentration predictions based on the trained model}
+\item{newX}{An elemental counts matrix in simplex space to make concentration predictions on.}
 }
 \value{
-A matrix of predicted elemental concentrations
+A matrix of predicted elemental concentrations in simplex space.
 }
 \description{
-This function takes a trained calibration model and a matrix of elemental concentrations
+This function takes a trained calibration model and a matrix of elemental counts
 and predicts elemental concentrations for the matrix.
+}
+\details{
+The procedure for predicting on new data in \code{pred} function is as followed:
+\enumerate{
+\item take in the output of calibration function \code{xrfcal}.
+\item if there are zeroes in \code{newX}, replace zeroes with \code{multRepl} from \code{zCompositions}.
+\item for each element to be predicted, transform newX to alr with best denominator for that element.
+\item predict all elements for each best deonimnator and transform back to simplex but only get the element of interest as output.
+\item aggregate all element predictions and close them to 1.
+\item export predicted concentrations.
+}
+}
+\examples{
+#Replace zeros in X
+dl <- apply(xrf$X, 2, agrmt::minnz)
+nzX <- zCompositions::multRepl(xrf$X, dl = dl, label = 0)
+
+#Reduce dataset
+xrfRed <- averager(nzX,xrf$Y)
+Xred <- xrfRed[[1]]
+Yred <- xrfRed[[2]]
+
+#Split dataset into train and test sets
+set.seed(123)
+ind <- sample.int(ceiling(dim(Xred)[1]/3))
+testX <- Xred[ind,]
+testY <- Yred[ind,]
+trainX <- Xred[-ind,]
+trainY <- Yred[-ind,]
+
+#Build a calibration model based on training data
+mdl <- xrfcal(trainX,trainY, method = "RF", reduce=FALSE)
+
+#Predict for testing data
+Yhat <- pred(mdl,testX) 
+
+#Calculate R2 and RMSE for test set
+res <- caret::postResample(Yhat$K,testY$K)
+
+#Plot predicted potassium concentrations vs actual concentrations for test set
+plot(y=Yhat$K,x=testY$K,ylim = c(0,max(cbind(Yhat$K,testY$K))),
+    xlim = c(0,max(cbind(Yhat$K,testY$K))),ylab="Calibrated Concentrations for K (mass fraction)",
+    xlab ="Actual Concentrations for K (mass fraction) ")
+lines(-1:1,-1:1)
+text(0.2*max(cbind(Yhat$K,testY$K)),0.8*max(cbind(Yhat$K,testY$K)),
+    paste("R2 =",signif(res[2],2),"\n", "RMSE =",signif(res[1],2)))
+}
+\references{
+Weltje, G. J., & Tjallingii, R. (2008). Calibration of XRF core scanners for quantitative geochemical logging of sediment cores: Theory and application. Earth and Planetary Science Letters, 274(3), 423-438. https://doi.org/10.1016/j.epsl.2008.07.054
+
+Breiman, L. (2001). Random Forests. Machine Learning, 45(1), 5-32. https://doi.org/10.1023/A:1010933404324
+
+Quinlan, J.R. (1993). Combining Instance-Based and Model-Based Learning. ICML.
+
+Aitchison, J. (1982). The Statistical Analysis of Compositional Data. Journal of the Royal Statistical Society. Series B (Methodological), 44(2), 139-177. http://www.jstor.org/stable/2345821
 }

@@ -3,7 +3,24 @@ quant <- function(X,p){
   return(as.numeric(stats::quantile(X,probs=p)))
 }
 
-
+#' @title Reduce the dataset to a representative dataset
+#'
+#' @description This function takes counts matrix X and concentrations matrix Y and reduce it to a smaller representative dataset by taking the average, first and third percentile 
+#' of counts for each unique concentration. This is useful when a unique concentration is associated with many count instances. 
+#' @examples
+#' #Replace zeros in X
+#' dl <- apply(xrf$X, 2, agrmt::minnz)
+#' nzX <- zCompositions::multRepl(xrf$X, dl = dl, label = 0)
+#' 
+#' #Reduce dataset
+#' xrfRed <- averager(nzX,xrf$Y)
+#' Xred <- xrfRed[[1]]
+#' Yred <- xrfRed[[2]]
+#' 
+#' @param X A matrix of XRF counts. Zeros should be replaced beforehand. 
+#' @param Y A matirx of reference concentrations. 
+#' @return A list with two objects, reduced X, `obj[[1]]`, reduced Y, `obj[[2]]`
+#' @export
 averager <- function(X,Y){
   Xm <- stats::aggregate(X,list(Y[,1]),FUN=mean)
   Xm <- Xm[,-1]
