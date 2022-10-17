@@ -15,7 +15,7 @@ averager(X, Y)
 A list with two objects, reduced X, \code{obj[[1]]}, reduced Y, \code{obj[[2]]}
 }
 \description{
-This function takes counts matrix X and concentrations matrix Y and reduce it to a smaller representative dataset by taking the average, first and third percentile
+This function takes counts matrix X and concentrations matrix Y and reduce it to a smaller representative dataset by taking the average, first and third quantile
 of counts for each unique concentration. This is useful when a unique concentration is associated with many count instances.
 }
 \examples{

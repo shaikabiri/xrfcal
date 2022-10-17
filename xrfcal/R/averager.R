@@ -5,7 +5,7 @@ quant <- function(X,p){
 
 #' @title Reduce the dataset to a representative dataset
 #'
-#' @description This function takes counts matrix X and concentrations matrix Y and reduce it to a smaller representative dataset by taking the average, first and third percentile 
+#' @description This function takes counts matrix X and concentrations matrix Y and reduce it to a smaller representative dataset by taking the average, first and third quantile 
 #' of counts for each unique concentration. This is useful when a unique concentration is associated with many count instances. 
 #' @examples
 #' #Replace zeros in X

@@ -11,7 +11,8 @@ xrfcal(
   dl = 0,
   oalr = FALSE,
   reduce = TRUE,
-  mtry = ncol(X),
+  thresh = 0.2,
+  mtry = ncol(X) - 1,
   ntree = 20
 )
 }
@@ -20,13 +21,15 @@ xrfcal(
 
 \item{Y}{Reference concentrations matrix in simplex space. Doesn't have to be closed.}
 
-\item{method}{Regression method. Either "LRCE", "MLR", "Cubist" or "RF".}
+\item{method}{Regression method. Either "LRCE", "ENET", "Cubist" or "RF".}
 
 \item{dl}{Detection limits to use for zero replacement algorithm. A vector with D elements. If not provided will be estimated.}
 
 \item{oalr}{A boolean parameter. If true the model results will be in alr space.}
 
 \item{reduce}{A boolean parameter. If true X and Y will be reduced to a representative dataset.}
+
+\item{thresh}{Threshold of fraction of zeroes in an element's counts to drop that element for model training}
 
 \item{mtry}{The number of variables for random forest to sample randomly at each split.}
 
@@ -38,7 +41,7 @@ A model object with attributes R2, RMSE, BestR2, BestRMSE and BestDenom. Rest of
 \description{
 This function takes an XRF counts matrix and reference concentrations matrix
 and returns a model object with R2s and RMSEs for each element with various denominators for alr and best R2, RMSE, and denominator for each element. Four methods are available to use, with logratio calibration equation (LRCE)
-using a single input for regression for each element, and multiple linear regression (MLR), cubist (Cubist) and random forest (RF), taking multiple inputs. Random forest and cubist are more computationally expensive
+using a single input for regression for each element, and elastic net (ENET), cubist (Cubist) and random forest (RF), taking multiple inputs. Random forest and cubist are more computationally expensive
 to train but generally more powerful.
 }
 \details{
@@ -52,10 +55,11 @@ denominator is chosen for prediction purposes.
 
 The procedure for developing the model is as followed:
 \enumerate{
+\item drop elements with xrf zero counts below the threshold.
 \item if "LRCE" is chosen as regression method, only use the mutual elements in X and Y. Otherwise, use all.
 \item if there are zeroes in X, use \code{multRepl} from \code{zCompositions} to replace zeroes. If detection limits are not provided
 estimate them as the minimum counts detected by XRF scanner for each element.
-\item if \code{reduce} is \code{TRUE}, reduce dataset to a representative dataset by taking mean, first and third percentile
+\item if \code{reduce} is \code{TRUE}, reduce dataset to a representative dataset by taking mean, first and third quantile.
 of counts for each unique Y and aggregate them to a new dataset.
 \item split data in three folds.
 \item for each fold, transform training and test set to alr space for each element as denominator.

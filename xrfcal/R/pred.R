@@ -14,9 +14,16 @@
 #' }
 #' 
 #' @examples 
+#' #Remove count columns with more than 20 percent zeroes
+#'
+#' zeroes <- apply(xrf$X,2,function(x){return(length(which(x==0))/length(x))})
+#' ind <- which(zeroes>0.2)
+#' if (length(ind)>0)
+#'   X <- xrf$X[,-ind]
+#'
 #' #Replace zeros in X
-#' dl <- apply(xrf$X, 2, agrmt::minnz)
-#' nzX <- zCompositions::multRepl(xrf$X, dl = dl, label = 0)
+#' dl <- apply(X, 2, agrmt::minnz)
+#' nzX <- zCompositions::multRepl(X, dl = dl, label = 0)
 #' 
 #' #Reduce dataset
 #' xrfRed <- averager(nzX,xrf$Y)
@@ -66,9 +73,9 @@
 
 pred <- function(mdl, newX) {
   
-  if (mdl$Method == "LRCE") {
-    newX <- newX[, colnames(mdl$Y)]
-  }
+  
+  
+  newX <- newX[,colnames(mdl$X)]
   
   #check if there are zeros if yes, replace zeros
   nzX <- newX
@@ -101,8 +108,11 @@ pred <- function(mdl, newX) {
     } 
   }
   
-  if (mdl$Method == "MLR") {
+  if (mdl$Method == "ENET") {
+    #Yhat for all elements with different denoms
     Yhat <- matrix(nrow=nrow(nzX),ncol=ncol(mdl$Y))
+
+    
     for (i in 1:ncol(mdl$Y)) {
       bdy <- which(colnames(mdl$Y)==mdl$BestDenom[i])
       bdx <- which(colnames(mdl$X)==mdl$BestDenom[i])
@@ -114,9 +124,9 @@ pred <- function(mdl, newX) {
       
       
       for (j in 1:(ncol(mdl$Y) - 1)) {
-        model <- stats::lm(Yt[,j] ~ as.matrix(Xt))
-        Yhatj[, j] <-
-          as.matrix(newXt) %*% model$coefficients[2:(ncol(Xt)+1)] + model$coefficients[1]
+        m <- glmnet::cv.glmnet(as.matrix(Xt),Yt[,j])
+        model <- glmnet::glmnet(as.matrix(Xt), Yt[,j], nlambda = 25, alpha = 0, family = 'gaussian', lambda = m$lambda.min)
+        Yhatj[,j] <- glmnet::predict.glmnet(model,as.matrix(newXt))
       }
       Yhatj <- invalr(Yhatj,bdy)
       Yhat[,i] <- Yhatj[,i]
@@ -146,7 +156,10 @@ pred <- function(mdl, newX) {
   
   if (mdl$Method == "RF"){
     Yhat <- matrix(nrow=nrow(nzX),ncol=ncol(mdl$Y))
+    
+    
     for (i in 1:ncol(mdl$Y)) {
+      print(i)
       bdy <- which(colnames(mdl$Y)==mdl$BestDenom[i])
       bdx <- which(colnames(mdl$X)==mdl$BestDenom[i])
       Xt <- alr(mdl$X, bdx)

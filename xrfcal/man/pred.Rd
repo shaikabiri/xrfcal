@@ -30,9 +30,16 @@ The procedure for predicting on new data in \code{pred} function is as followed:
 }
 }
 \examples{
+#Remove count columns with more than 20 percent zeroes
+
+zeroes <- apply(xrf$X,2,function(x){return(length(which(x==0))/length(x))})
+ind <- which(zeroes>0.2)
+if (length(ind)>0)
+  X <- xrf$X[,-ind]
+
 #Replace zeros in X
-dl <- apply(xrf$X, 2, agrmt::minnz)
-nzX <- zCompositions::multRepl(xrf$X, dl = dl, label = 0)
+dl <- apply(X, 2, agrmt::minnz)
+nzX <- zCompositions::multRepl(X, dl = dl, label = 0)
 
 #Reduce dataset
 xrfRed <- averager(nzX,xrf$Y)
